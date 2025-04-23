@@ -218,9 +218,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   try {
     console.log("DOM fully loaded");
-    console.log("Fetching header from:", `${baseUrl}/en/header`);
+    console.log("Fetching header from:", `${baseUrl}/en-us/header`);
 
-    const headerResponse = await fetch(`${baseUrl}/en/header`);
+    const headerResponse = await fetch(`${baseUrl}/en-us/header`);
 
     if (!headerResponse.ok)
       throw new Error(`Failed to load header: ${headerResponse.status}`);
@@ -247,7 +247,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     console.log("Header HTML inserted into DOM");
 
-    const footerUrl = `${baseUrl}/en/footer`;
+    const footerUrl = `${baseUrl}/en-us/footer`;
     console.log("Fetching footer from:", footerUrl);
     const footerResponse = await fetch(footerUrl);
     if (!footerResponse.ok)
