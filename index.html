@@ -4,7 +4,40 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>External Header Footer</title>
-    <link rel="stylesheet" href="styles.css" />
+
+    <!-- Add this to prevent Next.js hydration -->
+    <script>
+      // Disable Next.js hydration and routing
+      window.__NEXT_LOADED_PAGES__ = [];
+      window.__NEXT_REGISTER_PAGE = function () {
+        return;
+      };
+      window.__NEXT_P = [];
+
+      // Prevent pushState/replaceState from being used by Next.js
+      const originalPushState = history.pushState;
+      history.pushState = function () {
+        console.log("Prevented navigation via pushState");
+        return originalPushState.apply(this, arguments);
+      };
+
+      const originalReplaceState = history.replaceState;
+      history.replaceState = function () {
+        console.log("Prevented navigation via replaceState");
+        return originalReplaceState.apply(this, arguments);
+      };
+    </script>
+
+    <!-- Add this to prevent Next.js styles from affecting your page -->
+    <style>
+      #__next {
+        display: contents !important;
+      }
+      html {
+        scroll-behavior: auto !important;
+      }
+    </style>
+    <script src="script.js" type="module"></script>
   </head>
   <body class="prod-mode">
     <header>
@@ -13,13 +46,10 @@
 
     <main>
       <p>This is the main content of the page.</p>
-       <a href="/Testing/about" >About</a>
     </main>
 
     <footer>
       <div id="external-footer"></div>
     </footer>
-
-    <script src="script.js"></script>
   </body>
 </html>
