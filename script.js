@@ -1,4 +1,4 @@
-const baseUrl = "https://dev.jointcommission.org";
+const baseUrl = "https://prod.jointcommission.org";
 
 function clickHandler(event) {
   alert("Clicked!");
