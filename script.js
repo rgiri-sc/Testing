@@ -1,5 +1,5 @@
-const baseUrl = "https://dev.jointcommission.org";
-// const baseUrl = "http://localhost:3000";
+const baseUrl = "https://prod.jointcommission.org";
+
 function clickHandler(event) {
   alert("Clicked!");
   let anchor = event.target.closest("a");
