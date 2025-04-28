@@ -1,4 +1,4 @@
-const baseUrl = "https://dev.jointcommission.org/en-us";
+const baseUrl = "https://dev.jointcommission.org";
 
 function clickHandler(event) {
   alert("Clicked!");
@@ -170,7 +170,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   try {
-    const headerResponse = await fetch(`${baseUrl}/header`);
+    const headerResponse = await fetch(`${baseUrl}/en-us/header`);
     if (!headerResponse.ok)
       throw new Error(`Failed to load header: ${headerResponse.status}`);
     const headerHTML = await headerResponse.text();
@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     headerContainer.innerHTML = headerHTML;
     console.log("Header HTML inserted into DOM");
-    const footerUrl = `${baseUrl}/footer`;
+    const footerUrl = `${baseUrl}/en-us/footer`;
     console.log("Fetching footer from:", footerUrl);
     const footerResponse = await fetch(footerUrl);
     if (!footerResponse.ok)
