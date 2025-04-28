@@ -1,4 +1,4 @@
-const baseUrl = "https://dev.jointcommission.org";
+const baseUrl = "https://dev.jointcommission.org/en-us";
 
 function clickHandler(event) {
   alert("Clicked!");
@@ -21,8 +21,6 @@ function clickHandler(event) {
       } else {
         newUrl = `${baseUrl}/${href}`;
       }
-      console.log("Navigating to:", newUrl);
-      alert(`Navigating to: ${newUrl}`);
       window.location.href = newUrl;
     }
   } else {
@@ -66,7 +64,6 @@ function resolveUrlsAndImages(element) {
         }
       }
     });
-    console.log("MutationObserver callback executed");
   });
   menuObserver.observe(element, {
     childList: true,
@@ -101,21 +98,16 @@ function interceptApiCalls() {
 
         // Create new URL with baseUrl
         modifiedUrl = `${baseUrl}${path}`;
-        console.log(`Redirecting fetch from ${url} to ${modifiedUrl}`);
       }
     }
 
     // Call original fetch with modified URL
     return originalFetch.call(this, modifiedUrl, options);
   };
-
-  console.log("API call interception enabled");
 }
 
 // Function to disable Next.js hydration but allow search parameters
 function disableNextJsHydration() {
-  console.log("Disabling Next.js hydration with search parameter support");
-
   // Completely disable the Next.js router except for URL parameter updates
   if (window.next && window.next.router) {
     // Store original methods
@@ -124,32 +116,22 @@ function disableNextJsHydration() {
     // Override push to only allow search parameter updates
 
     window.next.router.push = function (url, as, options) {
-      console.log("next.router.push called with:", url, as, options);
-
       // only block navigation if it's a pathname is "/header"
       if (url.pathname === "/header") {
-        console.log("Blocking navigation to:", url);
         return Promise.resolve(false);
       } else {
-        console.log("Allowing navigation to:", url);
         return originalPush.call(this, url, as, options);
       }
     };
 
     // Similar override for replace
     window.next.router.replace = function (url, as, options) {
-      console.log("replace: Blocking navigation to: url: ", url);
-      console.log("replace: Blocking navigation to: as: ", as);
-      console.log("replace: Blocking navigation to: url: ", options);
-
       if (url?.query?.includes("rfkid_")) {
         // return original method
         return originalReplace(url, as, options);
       }
       // If it's just a search parameter update (same pathname)
       if (typeof url === "object" && url.query) {
-        console.log("Allowing search parameter update:", url.query);
-
         // Create URL with search parameters
         const searchParams = new URLSearchParams();
         for (const key in url.query) {
@@ -167,8 +149,6 @@ function disableNextJsHydration() {
 
       return Promise.resolve(false);
     };
-
-    console.log("Next.js router methods modified to allow search parameters");
   }
 }
 
@@ -178,30 +158,22 @@ document.addEventListener("DOMContentLoaded", async function () {
   const footerContainer = document.getElementById("external-footer");
 
   if (headerElement) {
-    console.log("Setting up MutationObserver for header element");
     resolveUrlsAndImages(headerElement);
-    console.log("MutationObserver started for header element");
   } else {
     console.warn("Header element not found for observation");
   }
 
   if (footerContainer) {
-    console.log("Setting up MutationObserver for footer container");
     resolveUrlsAndImages(footerContainer);
-    console.log("MutationObserver started for footer container");
   } else {
     console.warn("Footer container not found for observation");
   }
 
   try {
-    console.log("DOM fully loaded");
-    console.log("Fetching header from:", `${baseUrl}/en-us/header`);
-    const headerResponse = await fetch(`${baseUrl}/en-us/header`);
+    const headerResponse = await fetch(`${baseUrl}/header`);
     if (!headerResponse.ok)
       throw new Error(`Failed to load header: ${headerResponse.status}`);
     const headerHTML = await headerResponse.text();
-    console.log("Raw header HTML received, length:", headerHTML.length);
-    console.log("Header HTML preview:", headerHTML.substring(0, 200) + "...");
     const headerContainer = document.getElementById("external-header");
     if (!headerContainer) {
       console.error(
@@ -211,8 +183,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
     headerContainer.innerHTML = headerHTML;
     console.log("Header HTML inserted into DOM");
-
-    const footerUrl = `${baseUrl}/en-us/footer`;
+    const footerUrl = `${baseUrl}/footer`;
     console.log("Fetching footer from:", footerUrl);
     const footerResponse = await fetch(footerUrl);
     if (!footerResponse.ok)
