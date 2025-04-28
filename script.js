@@ -1,9 +1,17 @@
 const baseUrl = "https://dev.jointcommission.org";
+// const baseUrl = "http://localhost:3000";
+const domestic = "en-us";
+const international = "en";
+const local = domestic;
 
 function clickHandler(event) {
-  alert("Clicked!");
+  // alert("Clicked!");
   let anchor = event.target.closest("a");
+
   if (anchor && anchor.href) {
+    if (anchor.getAttribute("target") === "_blank") {
+      return;
+    }
     const href = anchor.getAttribute("href");
     if (
       href &&
@@ -24,7 +32,7 @@ function clickHandler(event) {
       window.location.href = newUrl;
     }
   } else {
-    alert("No href attribute found for the clicked element.");
+    console.error("No href attribute found for the clicked element.");
   }
 }
 
@@ -64,6 +72,7 @@ function resolveUrlsAndImages(element) {
         }
       }
     });
+    //console.log("MutationObserver callback executed");
   });
   menuObserver.observe(element, {
     childList: true,
@@ -88,7 +97,8 @@ function interceptApiCalls() {
       // If it's a relative URL or from current origin but should be from baseUrl
       if (
         url.includes("api/suggest-text") ||
-        url.includes("api/auth/session")
+        url.includes("api/auth/session") ||
+        url.includes("_next/data")
       ) {
         // Extract the path part
         let path = url;
@@ -98,16 +108,21 @@ function interceptApiCalls() {
 
         // Create new URL with baseUrl
         modifiedUrl = `${baseUrl}${path}`;
+        //console.log(`Redirecting fetch from ${url} to ${modifiedUrl}`);
       }
     }
 
     // Call original fetch with modified URL
     return originalFetch.call(this, modifiedUrl, options);
   };
+
+  //console.log("API call interception enabled");
 }
 
 // Function to disable Next.js hydration but allow search parameters
 function disableNextJsHydration() {
+  //console.log("Disabling Next.js hydration with search parameter support");
+
   // Completely disable the Next.js router except for URL parameter updates
   if (window.next && window.next.router) {
     // Store original methods
@@ -116,22 +131,45 @@ function disableNextJsHydration() {
     // Override push to only allow search parameter updates
 
     window.next.router.push = function (url, as, options) {
+      //console.log("next.router.push called with:", url, as, options);
+
+      // If URL dosen't start with /, add it
+      if (!url.startsWith("/")) {
+        return;
+      }
+
       // only block navigation if it's a pathname is "/header"
       if (url.pathname === "/header") {
+        //console.log("Blocking navigation to:", url);
         return Promise.resolve(false);
       } else {
+        //console.log("Allowing navigation to:", url);
+        if (
+          url.startsWith(`/${domestic}`) ||
+          url.startsWith(`/${international}`)
+        ) {
+          // return original method
+          url = `${baseUrl}${url}`;
+          return originalPush.call(this, url, as, options);
+        }
         return originalPush.call(this, url, as, options);
       }
     };
 
     // Similar override for replace
     window.next.router.replace = function (url, as, options) {
-      if (url?.query?.includes("rfkid_")) {
+      //console.log("replace: Blocking navigation to: url: ", url);
+      //console.log("replace: Blocking navigation to: as: ", as);
+      //console.log("replace: Blocking navigation to: url: ", options);
+
+      if (url?.query?.includes("rfkid_") || url?.query?.includes("rfkid_")) {
         // return original method
         return originalReplace(url, as, options);
       }
       // If it's just a search parameter update (same pathname)
       if (typeof url === "object" && url.query) {
+        //console.log("Allowing search parameter update:", url.query);
+
         // Create URL with search parameters
         const searchParams = new URLSearchParams();
         for (const key in url.query) {
@@ -149,6 +187,8 @@ function disableNextJsHydration() {
 
       return Promise.resolve(false);
     };
+
+    //console.log("Next.js router methods modified to allow search parameters");
   }
 }
 
@@ -158,22 +198,30 @@ document.addEventListener("DOMContentLoaded", async function () {
   const footerContainer = document.getElementById("external-footer");
 
   if (headerElement) {
+    //console.log("Setting up MutationObserver for header element");
     resolveUrlsAndImages(headerElement);
+    //console.log("MutationObserver started for header element");
   } else {
     console.warn("Header element not found for observation");
   }
 
   if (footerContainer) {
+    //console.log("Setting up MutationObserver for footer container");
     resolveUrlsAndImages(footerContainer);
+    //console.log("MutationObserver started for footer container");
   } else {
     console.warn("Footer container not found for observation");
   }
 
   try {
-    const headerResponse = await fetch(`${baseUrl}/en-us/header`);
+    //console.log("DOM fully loaded");
+    //console.log("Fetching header from:", `${baseUrl}/${local}/header`);
+    const headerResponse = await fetch(`${baseUrl}/${local}/header`);
     if (!headerResponse.ok)
       throw new Error(`Failed to load header: ${headerResponse.status}`);
     const headerHTML = await headerResponse.text();
+    //console.log("Raw header HTML received, length:", headerHTML.length);
+    //console.log("Header HTML preview:", headerHTML.substring(0, 200) + "...");
     const headerContainer = document.getElementById("external-header");
     if (!headerContainer) {
       console.error(
@@ -181,15 +229,17 @@ document.addEventListener("DOMContentLoaded", async function () {
       );
       return;
     }
+    headerContainer.addEventListener("click", clickHandler);
     headerContainer.innerHTML = headerHTML;
-    console.log("Header HTML inserted into DOM");
-    const footerUrl = `${baseUrl}/en-us/footer`;
-    console.log("Fetching footer from:", footerUrl);
+    //console.log("Header HTML inserted into DOM");
+
+    const footerUrl = `${baseUrl}/${local}/footer`;
+    //console.log("Fetching footer from:", footerUrl);
     const footerResponse = await fetch(footerUrl);
     if (!footerResponse.ok)
       throw new Error(`Failed to load footer: ${footerResponse.status}`);
     const footerHTML = await footerResponse.text();
-    console.log("Raw footer HTML received, length:", footerHTML.length);
+    //console.log("Raw footer HTML received, length:", footerHTML.length);
 
     if (!footerContainer) {
       console.error(
@@ -197,12 +247,12 @@ document.addEventListener("DOMContentLoaded", async function () {
       );
       return;
     }
-    console.log("Footer container found");
+    //console.log("Footer container found");
     footerContainer.innerHTML = footerHTML;
-    console.log("Footer HTML inserted into DOM");
+    //console.log("Footer HTML inserted into DOM");
 
     executeMatchingScripts(headerContainer);
-    console.log("Header scripts executed");
+    //console.log("Header scripts executed");
   } catch (error) {
     console.error("Error loading external components:", error);
   }
@@ -286,113 +336,53 @@ function processSrcsetValue(srcsetContent, baseUrl) {
 
 function executeMatchingScripts(container) {
   const scripts = container.querySelectorAll("script");
-  console.log(`Found ${scripts.length} scripts in container`);
+  //console.log(`Found ${scripts.length} scripts in container`);
   scripts.forEach((oldScript, index) => {
     if (
       (oldScript.src && oldScript.src.includes("_next")) ||
       oldScript.id === "__NEXT_DATA__"
     ) {
-      console.log(
+      /*console.log(
         `Executing script ${index + 1}:`,
         oldScript.src || oldScript.id || "inline script"
-      );
+      );*/
       const newScript = document.createElement("script");
       Array.from(oldScript.attributes).forEach((attr) => {
         newScript.setAttribute(attr.name, attr.value);
       });
       newScript.onload = () => {
-        console.log(`Executed script ${index + 1}:`, oldScript.src || "inline");
+        //console.log(`Executed script ${index + 1}:`, oldScript.src || "inline");
         disableNextJsHydration();
       };
       newScript.textContent = oldScript.textContent;
       oldScript.parentNode.replaceChild(newScript, oldScript);
     } else {
-      console.log(`Removing non-matching script ${index + 1}`);
+      //console.log(`Removing non-matching script ${index + 1}`);
       oldScript.parentNode.removeChild(oldScript);
     }
   });
 }
 
 function processRelativeUrls(html, baseUrl) {
-  console.log("Processing relative URLs in HTML content...");
+  //console.log("Processing relative URLs in HTML content...");
   try {
     html = html.replace(
-      /(src|href)=(["'])(\/[^"']+|[^"':][^"']+)(["'])/gi,
+      /(href)=(["'])(\/[^"']+|[^"':][^"']+)(["'])/gi,
       function (match, attr, quote, url, endQuote) {
         if (!url) return match;
-        url = url.replace(/&/g, "&");
-        if (
-          url.startsWith("http") ||
-          url.startsWith("//") ||
-          url.startsWith("mailto:") ||
-          url.startsWith("#") ||
-          url.startsWith("data:") ||
-          url.startsWith("javascript:") ||
-          url.startsWith("tel:")
-        )
-          return match;
-        try {
-          url = decodeURIComponent(url);
-        } catch (e) {
-          console.warn("Failed to decode URL:", url, e);
-        }
-        if (url.startsWith("/")) {
-          return `${attr}=${quote}${baseUrl}${url}${endQuote}`;
-        } else {
-          return `${attr}=${quote}${baseUrl}/${url}${endQuote}`;
+        url = url.replace(/&amp;/g, "&");
+        if (url.startsWith(`${baseUrl}/_next/static/media`)) {
+          return `${attr}=${quote}${url?.replace(
+            "_next/static/media",
+            "api/_next/static/media"
+          )}${endQuote}`;
         }
       }
     );
-    html = html.replace(
-      /srcset=(["'])(.*?)(["'])/gi,
-      function (match, openQuote, srcsetContent, closeQuote) {
-        if (!srcsetContent) return match;
-        const processedSrcset = srcsetContent
-          .split(",")
-          .map((srcSetPart) => {
-            const parts = srcSetPart.trim().split(/\s+/);
-            if (parts.length > 0) {
-              let url = parts[0];
-              if (!url) return srcSetPart;
-              url = url.replace(/&/g, "&");
-              if (
-                !url.startsWith("http") &&
-                !url.startsWith("//") &&
-                !url.startsWith("data:") &&
-                !url.startsWith("javascript:")
-              ) {
-                try {
-                  url = decodeURIComponent(url);
-                } catch (e) {
-                  console.warn("Failed to decode URL in srcset:", url, e);
-                }
-                if (url.startsWith("/")) {
-                  url = `${baseUrl}${url}`;
-                } else {
-                  url = `${baseUrl}/${url}`;
-                }
-              }
-              return parts.length > 1
-                ? `${url} ${parts.slice(1).join(" ")}`
-                : url;
-            }
-            return srcSetPart;
-          })
-          .join(", ");
-        return `srcset=${openQuote}${processedSrcset}${closeQuote}`;
-      }
-    );
-    console.log("URL processing complete");
+    //console.log("URL processing complete");
     return html;
   } catch (error) {
     console.error("Error in processRelativeUrls:", error);
-    try {
-      console.log("Trying DOM-based approach as fallback");
-      return domBasedProcessRelativeUrls(html, baseUrl);
-    } catch (domError) {
-      console.error("DOM-based approach also failed:", domError);
-      return html;
-    }
   }
 }
 function domBasedProcessRelativeUrls(html, baseUrl) {
