@@ -1,5 +1,5 @@
-const baseUrl = "https://dev.jointcommission.org";
-// const baseUrl = 'http://localhost:3000';
+const baseUrl = "https://prod.jointcommission.org";
+// const baseUrl = "http://localhost:3000";
 const domestic = "en-us";
 const international = "en";
 const local = domestic;
@@ -198,6 +198,10 @@ document.addEventListener("DOMContentLoaded", async function () {
   const headerElement = document.getElementById("external-header");
   const footerContainer = document.getElementById("external-footer");
 
+  // Hide header and footer initially
+  if (headerElement) headerElement.style.visibility = "hidden";
+  if (footerContainer) footerContainer.style.visibility = "hidden";
+
   try {
     const headerResponse = await fetch(`${baseUrl}/${local}/header`);
     if (!headerResponse.ok)
@@ -271,6 +275,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     };
 
     executeMatchingScripts(shadowHeader);
+
+    setTimeout(() => {
+      if (headerElement) headerElement.style.visibility = "visible";
+
+      if (footerContainer) footerContainer.style.visibility = "visible";
+    }, 500);
+
     resolveUrlsAndImages(shadowHeader);
     resolveUrlsAndImages(shadowFooter);
 
@@ -323,6 +334,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     }, 1000);
   } catch (error) {
     console.error("Error loading external components:", error);
+    // Show elements even if there's an error, to avoid permanently hidden elements
+    if (headerElement) headerElement.style.visibility = "visible";
+    if (footerContainer) footerContainer.style.visibility = "visible";
   }
 });
 
