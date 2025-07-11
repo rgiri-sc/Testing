@@ -1,4 +1,4 @@
-const baseUrl = "https://prod.jointcommission.org";
+const baseUrl = "https://dev.jointcommission.org";
 // const baseUrl = "http://localhost:3000";
 const domestic = "en-us";
 const international = "en";
@@ -147,8 +147,8 @@ function disableNextJsHydration() {
 function networkListener() {
   const originalFetch = window.fetch;
   const redirectUrls = [
-    "/api/auth/session",
-    "/api/auth/_log",
+    // "/api/auth/session",
+    // "/api/auth/_log",
     "/en-us/geolocation",
     "/en/geolocation",
     "/api/suggest-text",
@@ -167,6 +167,15 @@ function networkListener() {
         ? baseUrl
         : `${baseUrl}/` + "api/philosopher?file=" + baseUrl + url;
       return originalFetch.call(this, newUrl, options);
+    }
+    if (url.startsWith("/api/auth/session") && typeof url === "string") {
+      const newUrl = baseUrl?.endsWith("/")
+        ? baseUrl
+        : `${baseUrl}/` + "api/philosopher?file=" + baseUrl + url;
+      return originalFetch.call(this, newUrl, {
+        ...options,
+        credentials: "include",
+      });
     }
     return originalFetch.call(this, url, options);
   };
