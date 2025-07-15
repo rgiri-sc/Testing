@@ -147,7 +147,7 @@ function disableNextJsHydration() {
 function networkListener() {
   const originalFetch = window.fetch;
   const redirectUrls = [
-    // "/api/auth/session",
+    "/api/auth/session",
     // "/api/auth/_log",
     "/en-us/geolocation",
     "/en/geolocation",
