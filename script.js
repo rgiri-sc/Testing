@@ -147,7 +147,7 @@ function disableNextJsHydration() {
 function networkListener() {
   const originalFetch = window.fetch;
   const redirectUrls = [
-    // "/api/auth/session",
+    "/api/auth/session",
     // "/api/auth/_log",
     "/en-us/geolocation",
     "/en/geolocation",
@@ -169,9 +169,7 @@ function networkListener() {
       return originalFetch.call(this, newUrl, options);
     }
     if (url.startsWith("/api/auth/session") && typeof url === "string") {
-      const newUrl = baseUrl?.endsWith("/")
-        ? baseUrl
-        : `${baseUrl}/` + "api/philosopher?file=" + baseUrl + url;
+      const newUrl = baseUrl?.endsWith("/") ? baseUrl : `${baseUrl}/` + url;
       return originalFetch.call(this, newUrl, {
         ...options,
         credentials: "include",
@@ -208,8 +206,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   const footerContainer = document.getElementById("external-footer");
 
   // Hide header and footer initially
-  if (headerElement) headerElement.style.visibility = "hidden";
-  if (footerContainer) footerContainer.style.visibility = "hidden";
+  if (headerElement) headerElement.style.display = "none";
+  if (footerContainer) footerContainer.style.display = "none";
 
   try {
     const headerResponse = await fetch(`${baseUrl}/${local}/header`);
@@ -286,9 +284,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     executeMatchingScripts(shadowHeader);
 
     setTimeout(() => {
-      if (headerElement) headerElement.style.visibility = "visible";
+      if (headerElement) headerElement.style.display = "block";
 
-      if (footerContainer) footerContainer.style.visibility = "visible";
+      if (footerContainer) footerContainer.style.display = "block";
     }, 500);
 
     resolveUrlsAndImages(shadowHeader);
@@ -344,8 +342,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   } catch (error) {
     console.error("Error loading external components:", error);
     // Show elements even if there's an error, to avoid permanently hidden elements
-    if (headerElement) headerElement.style.visibility = "visible";
-    if (footerContainer) footerContainer.style.visibility = "visible";
+    if (headerElement) headerElement.style.display = "block";
+    if (footerContainer) footerContainer.style.display = "block";
   }
 });
 
