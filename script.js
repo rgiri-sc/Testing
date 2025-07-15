@@ -147,7 +147,7 @@ function disableNextJsHydration() {
 function networkListener() {
   const originalFetch = window.fetch;
   const redirectUrls = [
-    "/api/auth/session",
+    // "/api/auth/session",
     // "/api/auth/_log",
     "/en-us/geolocation",
     "/en/geolocation",
@@ -169,7 +169,7 @@ function networkListener() {
       return originalFetch.call(this, newUrl, options);
     }
     if (url.startsWith("/api/auth/session") && typeof url === "string") {
-      const newUrl = baseUrl?.endsWith("/") ? baseUrl : `${baseUrl}/` + url;
+      const newUrl = (url?.startsWith("/") ? baseUrl : `${baseUrl}/`) + url;
       return originalFetch.call(this, newUrl, {
         ...options,
         credentials: "include",
