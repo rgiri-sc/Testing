@@ -9,6 +9,7 @@ function clickHandler(event) {
 
   if (anchor?.href) {
     if (anchor.getAttribute("target") === "_blank") {
+      window.open(anchor.href, "_blank");
       return;
     }
     const href = anchor.getAttribute("href");
