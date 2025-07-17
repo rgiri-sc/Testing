@@ -1,4 +1,4 @@
-const baseUrl = "https://prod.jointcommission.org";
+const baseUrl = "https://uat.jointcommission.org";
 // const baseUrl = "http://localhost:3000";
 const domestic = "en-us";
 const international = "en";
