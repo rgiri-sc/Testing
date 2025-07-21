@@ -169,7 +169,11 @@ function networkListener() {
         : `${baseUrl}/` + "api/philosopher?file=" + baseUrl + url;
       return originalFetch.call(this, newUrl, options);
     }
-    if (url.startsWith("/api/auth/session") && typeof url === "string") {
+    if (
+      (url.startsWith("/api/auth/session") ||
+        url.startsWith("/api/auth/csrf")) &&
+      typeof url === "string"
+    ) {
       const newUrl = (url?.startsWith("/") ? baseUrl : `${baseUrl}/`) + url;
       return originalFetch.call(this, newUrl, {
         ...options,
