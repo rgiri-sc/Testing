@@ -30,13 +30,17 @@ function clickHandler(event) {
         newUrl = `${baseUrl}/${href}`;
       }
       window.location.href = newUrl;
+      return;
     }
     if (href.startsWith("javascript:")) {
       return;
     }
     if (href.startsWith(baseUrl)) {
       window.location.href = href;
+      return;
     }
+    window.location.href = href;
+    return;
   } else {
     console.error("No href attribute found for the clicked element.");
   }
@@ -490,3 +494,4 @@ function executeMatchingScripts(container) {
     }
   });
 }
+
