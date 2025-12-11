@@ -6,8 +6,8 @@ const local = domestic;
 
 function clickHandler(event) {
   let anchor = event.target.closest("a");
-
   if (anchor?.href) {
+    const hrefURL = new URL(anchor?.href);
     if (anchor.getAttribute("target") === "_blank") {
       window.open(anchor.href, "_blank");
       return;
@@ -30,17 +30,15 @@ function clickHandler(event) {
         newUrl = `${baseUrl}/${href}`;
       }
       window.location.href = newUrl;
-      return;
     }
     if (href.startsWith("javascript:")) {
       return;
     }
     if (href.startsWith(baseUrl)) {
       window.location.href = href;
-      return;
+    } else if (window.location.origin === hrefURL.origin) {
+      window.location.href = href;
     }
-    window.location.href = href;
-    return;
   } else {
     console.error("No href attribute found for the clicked element.");
   }
@@ -173,9 +171,11 @@ function networkListener() {
         : `${baseUrl}/` + "api/philosopher?file=" + baseUrl + url;
       return originalFetch.call(this, newUrl, options);
     }
-    // match URLs that start with api/auth/*
-    const isAuthUrl = /^\/api\/auth\//.test(url);
-    if (isAuthUrl && typeof url === "string") {
+    if (
+      (url.startsWith("/api/auth/session") ||
+        url.startsWith("/api/auth/csrf")) &&
+      typeof url === "string"
+    ) {
       const newUrl = (url?.startsWith("/") ? baseUrl : `${baseUrl}/`) + url;
       return originalFetch.call(this, newUrl, {
         ...options,
@@ -494,6 +494,3 @@ function executeMatchingScripts(container) {
     }
   });
 }
-
-
-
